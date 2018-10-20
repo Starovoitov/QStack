@@ -8,7 +8,7 @@ class CustomUserCreationForm(UserCreationForm):
     image = forms.FileField(label='image', required=False)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args,**kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({'class': 'profile_input', 'required': True})
         self.fields['email'].widget.attrs.update({'class': 'profile_input', 'required': True})
         self.fields['password1'].widget.attrs.update({'class': 'profile_input', 'required': True})
@@ -16,7 +16,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'password1', 'password2', 'email','image')
+        fields = ('username', 'password1', 'password2', 'email', 'image')
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -80,13 +80,13 @@ class CustomUserChangeForm(UserChangeForm):
     image = forms.FileField(label='image', required=False)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args,**kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({'class': 'profile_input', 'required': True})
         self.fields['email'].widget.attrs.update({'class': 'profile_input', 'required': True})
 
     class Meta:
         model = get_user_model()
-        fields = ('username', 'email','image')
+        fields = ('username', 'email', 'image')
         exclude = ('password',)
 
     def clean_password(self):

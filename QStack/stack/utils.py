@@ -7,7 +7,7 @@ from .models import Question, Answer, Tag
 
 
 def set_list_order(request):
-    if not "current_order" in request.session:
+    if "current_order" not in request.session:
         request.session['current_order'] = '-pub_date'
 
     if request.method == "GET":

@@ -21,10 +21,10 @@ def index(request):
     elif 'tag' in request.GET:
         question_list = fetch_questions(request.GET['tag'], request.session['current_order'], by_tag=True)
 
-    if not question_list and not any( param in ['search','tag'] for param in request.GET):
+    if not question_list and not any(param in ['search', 'tag'] for param in request.GET):
         question_list = Question.objects.order_by(request.session['current_order'])
 
-    pag  = Paginator(question_list, 5, orphans=0, allow_empty_first_page=True)
+    pag = Paginator(question_list, 5, orphans=0, allow_empty_first_page=True)
     question_list, page_range = paginate(request, pag, question_list)
 
     template = loader.get_template('stack/index.html')
@@ -71,7 +71,7 @@ def give_answer(request, question_id):
 
     question = get_object_or_404(Question, pk=question_id)
     if request.method == 'POST' and request.user.is_authenticated:
-        answer = Answer(content = request.POST['answer'].rstrip(), question = question, author=request.user)
+        answer = Answer(content=request.POST['answer'].rstrip(), question=question, author=request.user)
         answer.save()
 
         send_mail('New answer', 'You have gotten a new answer to your question: '
@@ -102,10 +102,9 @@ def ask_question(request):
                                                           'q_tags': request.POST['q_tags'],
                                                           'error': 'should be used no more than 3 tags'})
 
-
-        new_question = Question(content = request.POST['q_content'].strip(),
-                                header = request.POST['q_header'].strip(),
-                                user = request.user)
+        new_question = Question(content=request.POST['q_content'].strip(),
+                                header=request.POST['q_header'].strip(),
+                                user=request.user)
         new_question.save()
 
         if entered_tags:
