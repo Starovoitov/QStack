@@ -1,4 +1,5 @@
-from django.core.paginator import  EmptyPage, PageNotAnInteger
+from django.core.paginator import EmptyPage, PageNotAnInteger
+from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Q
 import operator
 from functools import reduce
@@ -51,7 +52,7 @@ def paginate(request, paginator, item_list):
     try:
         page_num = request.GET["page_number"]
         item_list = paginator.page(page_num)
-    except (KeyError, EmptyPage, PageNotAnInteger) as e:
+    except (KeyError, EmptyPage, PageNotAnInteger, MultiValueDictKeyError) as e:
         page_num = 1
         item_list = paginator.page(page_num)
     finally:

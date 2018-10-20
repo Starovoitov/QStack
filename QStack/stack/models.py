@@ -34,7 +34,8 @@ class NewUserManager(UserManager):
         birth and password.
         """
         user = self.create_user(
-            email,
+            username=username,
+            email=self.normalize_email(email),
             password=password,
             image=image,
         )

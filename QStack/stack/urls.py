@@ -2,8 +2,9 @@ from django.conf.urls import url
 from django.urls import path
 
 from . import views
+from .apps import StackConfig
 
-app_name = 'stack'
+app_name = StackConfig.name
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     path('<int:question_id>/', views.detail, name='detail'),

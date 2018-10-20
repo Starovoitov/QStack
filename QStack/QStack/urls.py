@@ -19,13 +19,15 @@ from django.urls import path
 from django.views.generic.base import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from stack.apps import StackConfig
 
 from stack import views
 
+app_name = StackConfig.name
 urlpatterns = [
     path('', TemplateView.as_view(template_name='index.html'), name='index'),
-    url(r'^stack/', include('stack.urls')),
-    path(r'stack/', include('django.contrib.auth.urls')),
+    url(r'^' + app_name + '/', include(app_name + '.urls')),
+    path(r'' + app_name + '/', include('django.contrib.auth.urls')),
     path('signup/', views.SignUp.as_view(), name='signup'),
     path('profile/', views.Profile.as_view(), name='profile'),
     path('password_reset/', TemplateView.as_view(template_name='password_reset_form.html'), name='password_reset_form'),

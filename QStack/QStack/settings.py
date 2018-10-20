@@ -58,7 +58,8 @@ ROOT_URLCONF = 'QStack.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'stack/templates/registration'), os.path.join(BASE_DIR, 'stack/templates/stack')],
+        'DIRS': [os.path.join(BASE_DIR, 'stack/templates/registration'),
+                 os.path.join(BASE_DIR, 'stack/templates/stack')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
