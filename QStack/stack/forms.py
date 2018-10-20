@@ -18,7 +18,6 @@ class CustomUserCreationForm(UserCreationForm):
         model = get_user_model()
         fields = ('username', 'password1', 'password2', 'email','image')
 
-
     def clean_password2(self):
         # Check that the two password entries match
         password1 = self.cleaned_data.get("password1")
@@ -48,20 +47,20 @@ class CustomUserCreationForm(UserCreationForm):
         try:
             w, h = get_image_dimensions(image)
 
-            #validate dimensions
+            # validate dimensions
             max_width = max_height = 1000
             if w > max_width or h > max_height:
                 raise forms.ValidationError(
                     u'Please use an image that is '
-                     '%s x %s pixels or smaller.' % (max_width, max_height))
+                    '%s x %s pixels or smaller.' % (max_width, max_height))
 
-            #validate content type
+            # validate content type
             main, sub = image.content_type.split('/')
             if not (main == 'image' and sub in ['jpeg', 'pjpeg', 'gif', 'png']):
                 raise forms.ValidationError(u'Please use a JPEG, '
-                    'GIF or PNG image.')
+                                            'GIF or PNG image.')
 
-            #validate file size
+            # validate file size
             if len(image) > (120 * 1024):
                 raise forms.ValidationError(
                     u'Avatar file size may not exceed 20k.')
@@ -74,6 +73,7 @@ class CustomUserCreationForm(UserCreationForm):
             pass
 
         return image
+
 
 class CustomUserChangeForm(UserChangeForm):
 

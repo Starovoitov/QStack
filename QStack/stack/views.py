@@ -63,6 +63,7 @@ def mark_answer(request, question_id, answer_id):
     answer.change_mark()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+
 def give_answer(request, question_id):
 
     if not request.POST['answer'] or request.POST['answer'] == "":
@@ -73,12 +74,12 @@ def give_answer(request, question_id):
         answer = Answer(content = request.POST['answer'].rstrip(), question = question, author=request.user)
         answer.save()
 
-
         send_mail('New answer', 'You have gotten a new answer to your question: '
                   + request.build_absolute_uri().replace('give_answer/', ''),
-                'test@example.com', [request.user.email], fail_silently=True)
+                  'test@example.com', [request.user.email], fail_silently=True)
 
     return HttpResponseRedirect(reverse('stack:detail', args=(question_id,)))
+
 
 def ask_question(request):
 
@@ -115,9 +116,11 @@ def ask_question(request):
 
     return index(request)
 
+
 def ask(request):
     template = loader.get_template('stack/ask.html')
     return HttpResponse(template.render({}, request))
+
 
 def tags(request):
     template = loader.get_template('stack/tags.html')
@@ -129,6 +132,7 @@ class SignUp(generic.CreateView):
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('login')
     template_name = 'registration/signup.html'
+
 
 class Profile(generic.UpdateView):
     form_class = CustomUserChangeForm

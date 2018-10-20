@@ -42,8 +42,10 @@ class NewUserManager(UserManager):
         user.save(using=self._db)
         return user
 
+
 def get_image_path(instance, filename):
     return os.path.join('photos', str(instance.id), filename)
+
 
 def prohibit_empty(val):
     if not val or val == '':
@@ -60,6 +62,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
 
 class Answer(models.Model):
     id = models.AutoField(primary_key=True)
@@ -136,7 +139,6 @@ class Answer(models.Model):
 
     def get_votes_count(self):
         return self.answer_vote.all().count()
-
 
 
 class Question(models.Model):

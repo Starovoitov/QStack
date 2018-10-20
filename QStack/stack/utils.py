@@ -17,6 +17,7 @@ def set_list_order(request):
             elif request.GET['order'] == 'vote':
                 request.session['current_order'] = '-votes'
 
+
 def fetch_questions(user_query, order, by_tag=False):
     try:
         if user_query:
@@ -74,6 +75,7 @@ def add_tag(new_tag, question):
     else:
         tag = Tag.objects.get(tag=new_tag)
     question.tag.add(tag)
+
 
 def is_correct_answer_given(question):
     if Answer.objects.filter(correctness=True, question=question).count() > 0:
