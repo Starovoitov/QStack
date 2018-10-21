@@ -1,7 +1,8 @@
+import operator
+
 from django.core.paginator import EmptyPage, PageNotAnInteger
 from django.utils.datastructures import MultiValueDictKeyError
 from django.db.models import Q
-import operator
 from functools import reduce
 
 from .models import Question, Answer, Tag

@@ -2,13 +2,16 @@ from django.template import loader
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse, reverse_lazy
-from .forms import CustomUserCreationForm, CustomUserChangeForm
 from django.views import generic
 from django.contrib import messages
 from django.core.paginator import Paginator
-
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+from django.contrib.auth import login
+from django.utils.http import urlsafe_base64_decode
 
+from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .tokens import account_activation_token
 from .utils import *
 
 
@@ -148,3 +151,23 @@ class Profile(generic.UpdateView):
         self.last_file = self.request.FILES.get('image')
         messages.add_message(request, messages.INFO, self.last_file)
         return super().post(request, *args, **kwargs)
+
+
+def account_activation_sent(request):
+    return render(request, 'registration/account_activation_email.html')
+
+
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = get_user_model().objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+        user = None
+
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
+        return index(request)
+    else:
+        return render(request, 'registration/account_activation_invalid.html')

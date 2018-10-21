@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from django.db import models
 from django.utils import timezone
@@ -6,7 +7,6 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-import os
 
 
 class NewUserManager(UserManager):
@@ -40,6 +40,8 @@ class NewUserManager(UserManager):
             image=image,
         )
         user.is_admin = True
+        user.is_superuser = True
+        user.is_staff = True
         user.save(using=self._db)
         return user
 
@@ -56,6 +58,9 @@ def prohibit_empty(val):
 class User(AbstractUser):
 
     image = models.ImageField(upload_to=get_image_path, blank=True, null=True)
+    is_active = models.BooleanField(default=True,
+                                    verbose_name="Active")
+
     objects = NewUserManager()
 
     USERNAME_FIELD = 'username'

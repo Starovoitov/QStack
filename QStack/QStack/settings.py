@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
 ]
 
 AUTH_USER_MODEL = 'stack.User'
@@ -122,7 +121,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
-
+SITE_NAME = 'QStack'
 MEDIA_URL = '/photos/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '')
 STATIC_URL = '/static/'
@@ -131,5 +130,6 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "stack/static/stack"),)
 LOGIN_URL = '/stack/'
 LOGIN_REDIRECT_URL = '/stack/'
 LOGOUT_REDIRECT_URL = '/stack/'
+DEFAULT_FROM_EMAIL="noreply@mail.com"
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")

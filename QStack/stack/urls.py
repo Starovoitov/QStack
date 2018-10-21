@@ -16,4 +16,7 @@ urlpatterns = [
     path('ask/', views.ask, name='ask'),
     path('tags/', views.tags, name='tags'),
     path('ask_question/', views.ask_question, name='ask_question'),
+    url(r'^account_activation_sent/$', views.account_activation_sent, name='account_activation_sent'),
+    url(r'^activate/(?P<uidb64>.+)/(?P<token>.+)/$',
+        views.activate, name='activate'),
 ]

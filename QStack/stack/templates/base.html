@@ -35,7 +35,7 @@
      {% if user.is_authenticated %}
      <ul class="hdr">
      <li class="hdr"><a href="{% url 'logout' %}?next={{request.path}}" class="hdr">logout</a></li>
-     <li class="hdr"><div class="hdr_element">Hi {{ user.username }}! </div></li>
+     <li class="hdr"><div class="hdr_element"><a href="{% url 'profile' %}">Hi {{ user.username }}!</a> </div></li>
           {% if user.image %}
      <li class="hdr"><a href="{% url 'profile' %}">
         <img src="{{user.image.url}}" alt="" class="avatar"/></a>
