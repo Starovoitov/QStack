@@ -9,6 +9,7 @@ from .models import Question, Answer, Tag
 
 
 def set_list_order(request):
+    """Switches order od rendered questions (either by date or by votes number)"""
     if "current_order" not in request.session:
         request.session['current_order'] = '-pub_date'
 
@@ -21,6 +22,7 @@ def set_list_order(request):
 
 
 def fetch_questions(user_query, order, by_tag=False):
+    """Returns list of question matching against search query (either by key words or by tag)"""
     try:
         if user_query:
             tag_query = user_query.split(':')
@@ -42,8 +44,10 @@ def fetch_questions(user_query, order, by_tag=False):
 
 
 def paginate(request, paginator, item_list):
+    """Returns list of items (questions or answers) should be rendered on given page"""
 
     def get_page_range():
+        """Returns range of pages rendered at the bottom"""
         index = item_list.number - 1
         max_index = len(paginator.page_range)
         start_index = index - 3 if index >= 3 else 0
@@ -61,6 +65,7 @@ def paginate(request, paginator, item_list):
 
 
 def vote(request, message):
+    """Either upvotes or downvotes questions, answers"""
     if request.method == "POST" and request.user.is_authenticated:
         if 'upvote' in request.POST:
                 if message.upvote(request.user) == 'already_upvoted':
@@ -71,6 +76,7 @@ def vote(request, message):
 
 
 def add_tag(new_tag, question):
+    """Puts tag into given question"""
     if not Tag.objects.filter(tag=new_tag).exists():
         tag = Tag(tag=new_tag)
         tag.save()
@@ -80,6 +86,7 @@ def add_tag(new_tag, question):
 
 
 def is_correct_answer_given(question):
+    """Returns true if question already has acceoted answer"""
     if Answer.objects.filter(correctness=True, question=question).count() > 0:
         return True
     return False

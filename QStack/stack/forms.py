@@ -43,10 +43,7 @@ class CustomUserCreationForm(UserCreationForm):
             user.is_active = False
             user.save()
 
-            date = user.date_joined.replace(microsecond=0)
-
             subject = u'[%s] : Subscription' % settings.SITE_NAME
-
             mail = render_to_string('registration/account_activation_email.html',
                                     {'title': subject,
                                      'username': user.username,

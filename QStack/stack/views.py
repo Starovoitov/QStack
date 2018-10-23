@@ -27,7 +27,7 @@ def index(request):
     if not question_list and not any(param in ['search', 'tag'] for param in request.GET):
         question_list = Question.objects.order_by(request.session['current_order'])
 
-    pag = Paginator(question_list, 5, orphans=0, allow_empty_first_page=True)
+    pag = Paginator(question_list, 20, orphans=0, allow_empty_first_page=True)
     question_list, page_range = paginate(request, pag, question_list)
 
     template = loader.get_template('stack/index.html')
@@ -42,7 +42,7 @@ def index(request):
 def detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     answer_list = question.answer_set.get_queryset().order_by('-votes', '-pub_date')
-    pag = Paginator(answer_list, 2, orphans=0, allow_empty_first_page=True)
+    pag = Paginator(answer_list, 20, orphans=0, allow_empty_first_page=True)
     answer_list, page_range = paginate(request, pag, answer_list)
     return render(request, 'stack/detail.html', {'question': question,
                                                  'answer_list': answer_list, 'page_range': page_range,
@@ -74,7 +74,7 @@ def give_answer(request, question_id):
 
     question = get_object_or_404(Question, pk=question_id)
     if request.method == 'POST' and request.user.is_authenticated:
-        answer = Answer(content=request.POST['answer'].rstrip(), question=question, author=request.user)
+        answer = Answer(content=request.POST['answer'].rstrip(), question=question, user=request.user)
         answer.save()
 
         send_mail('New answer', 'You have gotten a new answer to your question: '
