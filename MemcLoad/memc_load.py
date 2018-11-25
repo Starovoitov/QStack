@@ -10,7 +10,7 @@ from optparse import OptionParser
 # brew install protobuf
 # protoc  --python_out=. ./appsinstalled.proto
 # pip install protobuf
-import homework.appsinstalled_pb2
+import appsinstalled_pb2
 # pip install python-memcached
 import memcache
 import threading
@@ -31,7 +31,7 @@ def dot_rename(path):
 
 
 def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
-    ua = homework.appsinstalled_pb2.UserApps()
+    ua = appsinstalled_pb2.UserApps()
     ua.lat = appsinstalled.lat
     ua.lon = appsinstalled.lon
     key = "%s:%s" % (appsinstalled.dev_type, appsinstalled.dev_id)
@@ -92,7 +92,18 @@ def handle_process(fn, options):
     }
 
     results = []
+    job_queue = Queue.Queue()
     processed = errors = 0
+
+    workers = []
+    for i in range(4):
+        thread = threading.Thread(target=handle_thread, args=(job_queue, results))
+        thread.daemon = True
+        workers.append(thread)
+
+    for thread in workers:
+        thread.start()
+
     logging.info('Processing %s' % fn)
     fd = gzip.open(fn)
     for line in fd:
@@ -108,11 +119,17 @@ def handle_process(fn, options):
             errors += 1
             logging.error("Unknown device type: %s" % appsinstalled.dev_type)
             continue
-        ok = insert_appsinstalled(memc_addr, appsinstalled, options.dry)
-        if ok:
-            processed += 1
-        else:
-            errors += 1
+
+        job_queue.put((memc_addr, appsinstalled, options.dry))
+
+        if not all(thread.is_alive() for thread in workers):
+            break
+
+    for thread in workers:
+        if thread.is_alive():
+            thread.join()
+
+    processed, errors = [sum(x) for x in zip(*results)]
 
     if processed:
         err_rate = float(errors) / processed
@@ -123,18 +140,35 @@ def handle_process(fn, options):
     fd.close()
 
 
+def handle_thread(job_queue, results):
+    processed = errors = 0
+    while True:
+        try:
+            task = job_queue.get(timeout=0.1)
+        except Queue.Empty:
+            results.append((processed, errors))
+            return
+
+        memc_addr, appsinstalled, dry_run = task
+        ok = insert_appsinstalled(memc_addr, appsinstalled, dry_run)
+        if ok:
+            processed += 1
+        else:
+            errors += 1
+
+
 def prototest():
     sample = "idfa\t1rfw452y52g2gq4g\t55.55\t42.42\t1423,43,567,3,7,23\ngaid\t7rfw452y52g2gq4g\t55.55\t42.42\t7423,424"
     for line in sample.splitlines():
         dev_type, dev_id, lat, lon, raw_apps = line.strip().split("\t")
         apps = [int(a) for a in raw_apps.split(",") if a.isdigit()]
         lat, lon = float(lat), float(lon)
-        ua = homework.appsinstalled_pb2.UserApps()
+        ua = appsinstalled_pb2.UserApps()
         ua.lat = lat
         ua.lon = lon
         ua.apps.extend(apps)
         packed = ua.SerializeToString()
-        unpacked = homework.appsinstalled_pb2.UserApps()
+        unpacked = appsinstalled_pb2.UserApps()
         unpacked.ParseFromString(packed)
         assert ua == unpacked
 
