@@ -17,9 +17,9 @@ import threading
 import Queue
 from functools import partial
 import multiprocessing
-from time import time
+from time import time, sleep
 
-
+lines = 0
 NORMAL_ERR_RATE = 0.01
 AppsInstalled = collections.namedtuple("AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"])
 
@@ -30,21 +30,28 @@ def dot_rename(path):
     os.rename(path, os.path.join(head, "." + fn))
 
 
-def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
+def insert_appsinstalled(memc_pool, memc_addr, appsinstalled, dry_run=False):
     ua = appsinstalled_pb2.UserApps()
     ua.lat = appsinstalled.lat
     ua.lon = appsinstalled.lon
     key = "%s:%s" % (appsinstalled.dev_type, appsinstalled.dev_id)
     ua.apps.extend(appsinstalled.apps)
     packed = ua.SerializeToString()
-    # @TODO persistent connection
-    # @TODO retry and timeouts!
     try:
         if dry_run:
             logging.debug("%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " ")))
         else:
-            memc = memcache.Client([memc_addr])
-            memc.set(key, packed)
+            try:
+                memc = memc_pool.get(timeout=10.1)
+            except Queue.Empty:
+                memc = memcache.Client([memc_addr], socket_timeout=3.0)
+            ok = False
+            for n in range(3):
+                ok = memc.set(key, packed)
+                if ok:
+                    break
+                sleep(0.5)
+            memc_pool.put(memc)
     except Exception, e:
         logging.exception("Cannot write to memc %s: %s" % (memc_addr, e))
         return False
@@ -72,18 +79,16 @@ def parse_appsinstalled(line):
 
 def main(options):
     ts = time()
-    num_processes = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(processes=num_processes)
     fns = sorted(fn for fn in glob.iglob(options.pattern))
-    #print options
-    handler = partial(handle_process, options=options)
-    print handler.keywords
-    for fn in pool.imap(handler, fns):
-        dot_rename(fn)
+    handler = partial(handle_log, options=options)
+    # print handler.keywords
+    for fn in fns:
+        handle_log(fn, options)
     logging.info('Took %s', time() - ts)
 
 
-def handle_process(fn, options):
+def handle_log(fn, options):
+    global lines
     device_memc = {
         "idfa": options.idfa,
         "gaid": options.gaid,
@@ -91,8 +96,9 @@ def handle_process(fn, options):
         "dvid": options.dvid,
     }
 
+    pools = collections.defaultdict(Queue.Queue)
     results = []
-    job_queue = Queue.Queue()
+    job_queue = Queue.Queue(maxsize=100)
     processed = errors = 0
 
     workers = []
@@ -120,7 +126,7 @@ def handle_process(fn, options):
             logging.error("Unknown device type: %s" % appsinstalled.dev_type)
             continue
 
-        job_queue.put((memc_addr, appsinstalled, options.dry))
+        job_queue.put((pools[memc_addr], memc_addr, appsinstalled, options.dry))
 
         if not all(thread.is_alive() for thread in workers):
             break
@@ -129,7 +135,13 @@ def handle_process(fn, options):
         if thread.is_alive():
             thread.join()
 
+    #while not results.empty():
+     #   processed_per_worker, errors_per_worker = results.get()
+      #  processed += processed_per_worker
+       # errors += errors_per_worker
+
     processed, errors = [sum(x) for x in zip(*results)]
+    logging.info("Lines: %d" % lines)
 
     if processed:
         err_rate = float(errors) / processed
@@ -141,16 +153,20 @@ def handle_process(fn, options):
 
 
 def handle_thread(job_queue, results):
+    global lines
     processed = errors = 0
     while True:
         try:
-            task = job_queue.get(timeout=0.1)
+            task = job_queue.get(timeout=10.1)
         except Queue.Empty:
             results.append((processed, errors))
             return
 
-        memc_addr, appsinstalled, dry_run = task
-        ok = insert_appsinstalled(memc_addr, appsinstalled, dry_run)
+        memc_pool, memc_addr, appsinstalled, dry_run = task
+        ok = insert_appsinstalled(memc_pool, memc_addr, appsinstalled, dry_run)
+
+        lines += 1
+        logging.info(lines)
         if ok:
             processed += 1
         else:
